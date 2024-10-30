@@ -1,5 +1,4 @@
 import React from 'react'
-import { EllipsisVertical } from 'lucide-react';
 import {motion} from 'framer-motion'
 import DropIndicator from './DropIndicator';
 import { Link } from 'react-router-dom';
@@ -18,9 +17,6 @@ const SingleTask = ({taskName, taskStatus, taskId, handleDragStart, headingColor
       className='active:cursor-grabbing cursor-grab  my-1 rounded flex justify-between items-center'
       style={{backgroundColor:color}}>
           <p className='text-base font-medium text-white p-2 '>{taskName}</p>
-          <button>
-              <EllipsisVertical/>
-          </button>
       </motion.div>
     </Link>
     
