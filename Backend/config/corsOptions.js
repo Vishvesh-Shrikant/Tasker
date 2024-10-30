@@ -1,4 +1,4 @@
-const allowedOrigins=['http://localhost:5173']
+const allowedOrigins=['http://localhost:5173', 'https://tasker-uc.vercel.app/']
 
 const corsOptions={
     origin:(origin, callback) => {
