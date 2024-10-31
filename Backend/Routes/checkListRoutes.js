@@ -1,6 +1,8 @@
 const express= require("express")
 const Checklist= require("../Models/checklistSchema.js")
 const verifyToken = require('../Middleware/verifyUser')
+const Task= require('../Models/tasksSchema.js')
+
 
 const router= express.Router()
 
@@ -8,9 +10,14 @@ router.post("/user/:taskId/checklist/create", verifyToken, async(req, res)=>{
     try
     {
         const taskId= req.params.taskId
-        const item= await Checklist.findById(taskId)
+        const item= await Task.findById(taskId)
         if(!item)
             return res.status(404).json({success:false, msg:"task not found"})
+
+
+        const checklist= await Checklist.findOne({taskId: taskId, name:req.body.name})
+        if(checklist)
+            return res.status(400).json({success:false, err:"Give a unique name for the checklist item"})
 
         const newItem= await Checklist.create({
             taskId:taskId, 
@@ -47,18 +54,19 @@ router.get("/user/:taskId/checklist/get", verifyToken, async(req, res)=>{
 router.patch('/user/:taskId/checklist/update/:listId', verifyToken, async(req, res)=>{
     try
     {
-        const taskId= req.params.taskId
-        const item= await Checklist.findById(req.params.listId)
+        const listId= req.params.listId
+        const item= await Checklist.findById(listId)
         if(!item)
             return res.status(404).json({success:false, msg:"task not found"})
 
         const updateItem={}
         if(req.body.rank)
-            update.rank=req.body.rank
+            updateItem.rank=req.body.rank
+        if(req.body.status)
+            updateItem.status=req.body.status
         if(req.body.name)
-            update.name=req.body.name
-
-        const updatedItem= await Checklist.findByIdAndUpdate(req.params.listId, {$set:updateItem}, { new: true })
+            updateItem.name=req.body.name
+        const updatedItem= await Checklist.findByIdAndUpdate(listId, {$set:updateItem}, { new: true })
 
         if(updatedItem)
             return res.status(200).json({success:true, msg:"checkList item updated", updatedItem})

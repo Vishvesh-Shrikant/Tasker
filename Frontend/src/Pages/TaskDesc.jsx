@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../api/AxiosApi'
-import { Pencil, Check } from 'lucide-react';
+import TaskDetailEdit from '../Components/TaskDetailEdit';
+import SingleCheckItem from '../Components/SingleCheckItem';
 
 const colourScheme={
   'backlog':'#8D99AE',
@@ -9,6 +10,7 @@ const colourScheme={
   'inprogress':'#25CED1',
   'completed':'#7AC74F'
 }
+
 
 const status={
   'backlog':'Backlog',
@@ -22,12 +24,23 @@ const TaskDesc = () => {
 
     const {teamId, taskId}= useParams()
     const [task, setTask]= useState({})
+    const [checklist, setChecklist]= useState([])
+    const [checklistProgressValue, setChecklistProgressValue]=useState(50)
+    const [dropdownVal,setDropdownVal]= useState([])
     const [isNameEdit, setIsNameEdit]= useState(false)
-
+    const [isDescEdit , setIsDescEdit]= useState(false)
     const [taskName, setTaskName]= useState(task.taskName)
     const [taskDescription, setTaskDescription]= useState(task.taskDescription)
-
+    let counter=0
     let taskStatus=''
+
+    const dropdownBg={
+      'backlog':'#77878BBB',
+      'todo':'#FEEA0099',
+      'ongoing':'#00AFB999',
+      'completed':'#5CF64A88'
+    }
+
 
     const getTask=()=>{
       api.get(`/user/${teamId}/task/get/${taskId}`, {
@@ -43,51 +56,123 @@ const TaskDesc = () => {
       })
       .catch(err=>console.log(err))
     }
+    const getChecklistItems=()=>{
+      api.get(`/user/${taskId}/checklist/get`, {
+        headers:{'Authorization': `Bearer ${localStorage.getItem("accessToken")}`}
+      })
+      .then(res=>{
+        if(res.data.success)
+        {
+          setChecklist(res.data.getListItems)
+          let items=[]
+          for(let i=0; i < res.data.getListItems.length ;i++)
+          { 
+            items[i]=res.data.getListItems[i].status
+          }
+          setDropdownVal(items)
+        }
+          
+      })
+      .catch(err=>{
+        console.log(err)
+      })
+    }
+
     useEffect(()=>{
       getTask()
+      getChecklistItems()
     },[])
+
 
     if(task!==undefined)
     {
       taskStatus= task.status
     }
     
-    const handleChange=(e)=>{
-      let newTask= e.target.value
-      setTaskName(newTask)
+    const handleNameChange=(e)=>{
+      let newTaskName= e.target.value
+      setTaskName(newTaskName)
     }
+    const handleNameSubmit=()=>{
+      api.patch(`/user/${teamId}/task/update/${taskId}`, {taskName: taskName}, {
+        headers:{'Authorization': `Bearer ${localStorage.getItem("accessToken")}`}
+      })
+      .then(res=>{
+        console.log(res)
+      })
+      .catch(err=>{
+        console.log(err)
+      })
+    }
+
+    const handleDescChange=(e)=>{
+      let newTaskDesc= e.target.value
+      setTaskDescription(newTaskDesc)
+    }
+    const handleDescSubmit=()=>{
+        api.patch(`/user/${teamId}/task/update/${taskId}`, {taskDescription: taskDescription}, {
+          headers:{'Authorization': `Bearer ${localStorage.getItem("accessToken")}`}
+        })
+        .then(res=>{
+          console.log(res)
+        })
+        .catch(err=>{
+          console.log(err)
+        })
+    }
+
+    const onDropdownChange=(e, id)=>{
+      let listId= checklist[id]._id
+      let status= e.target.value
+      api.patch(`/user/${taskId}/checklist/update/${listId}`, {status: status}, {
+        headers:{'Authorization': `Bearer ${localStorage.getItem("accessToken")}`}
+      })
+      .then(res=>{
+        getChecklistItems()
+      })
+      .catch(err=>{
+        console.log(err )
+      })
+      
+
+      // setDropdownVal(newList)
+
+    }
+    
+    
+    
+    
     
   return (
     <div className='ml-20 py-10 px-5 font-Raleway'>
-      <div className='text-xl'>
-        <div className='flex '>
-          <p className='mr-1'>Name: </p>
-          {
-            !isNameEdit ?
-            <div className='flex justify-center items-center '>
-              <span className={`text-[${colourScheme[taskStatus]}] bg-background outline-none font-semibold mx-1 w-1/3`}>{taskName}</span>
-              <div className='text-[#A0EADE] border rounded p-1 cursor-pointer' onClick={()=> setIsNameEdit(true)}>
-                <Pencil size={18} />
-              </div>
-              
-            </div>:
-            <div className='flex justify-center items-center' >
-              <input
-              value={taskName} 
-              type='text'
-              onChange={handleChange}
-              className={`text-[${colourScheme[taskStatus]}] bg-background outline-none font-semibold`}/>
-              <div className='text-[#A0EADE] border rounded p-1 cursor-pointer w-1/3' onClick={()=> setIsNameEdit(false)}>
-                <Check size={18} />  
-              </div>
-            </div>
+      {/* Task Information */}
+      <div className='text-lg'>
+        <TaskDetailEdit label='Name' isEdit={isNameEdit} setIsEdit={setIsNameEdit} colourScheme={colourScheme[taskStatus]} taskData={taskName} handleChange={handleNameChange} tooltipPlacement='top' handleSubmit={handleNameSubmit}/>
 
-          }
-          
-        </div>
-        <p>Description: <span className={`text-[${colourScheme[taskStatus]}] font-semibold`}>{taskDescription}</span></p>
+        <TaskDetailEdit label='Description' isEdit={isDescEdit} setIsEdit={setIsDescEdit} colourScheme={colourScheme[taskStatus]} taskData={taskDescription} handleChange={handleDescChange} tooltipPlacement='bottom' handleSubmit={handleDescSubmit}/>
+
         <p>Task Status: <span className={`text-[${colourScheme[taskStatus]}] font-semibold`}> {status[taskStatus]}</span></p>
       </div>
+      {/* Checklist */}
+
+      <div className='mt-10'>
+        <p className='text-xl font-semibold mb-2'>Checklist </p>
+        {
+          checklist &&
+          checklist.map(item=>{
+
+            let status= dropdownVal[counter]
+            
+
+            return(
+            <SingleCheckItem id={counter++} status={status} bgColour={dropdownBg[status]} itemName={item.name} key={item._id} onDropdownChange={onDropdownChange}/>
+          )}
+          )
+        }
+        
+      </div>
+
+
     </div>
   )
 }
