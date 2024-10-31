@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom'
 import api from '../api/AxiosApi'
 import TaskDetailEdit from '../Components/TaskDetailEdit';
 import SingleCheckItem from '../Components/SingleCheckItem';
-
+import { Plus } from 'lucide-react';
+import ChecklistModal from '../Components/ChecklistModal';
 const colourScheme={
   'backlog':'#8D99AE',
   'todo':'#FFB100',
@@ -25,12 +26,17 @@ const TaskDesc = () => {
     const {teamId, taskId}= useParams()
     const [task, setTask]= useState({})
     const [checklist, setChecklist]= useState([])
-    const [checklistProgressValue, setChecklistProgressValue]=useState(50)
     const [dropdownVal,setDropdownVal]= useState([])
     const [isNameEdit, setIsNameEdit]= useState(false)
     const [isDescEdit , setIsDescEdit]= useState(false)
     const [taskName, setTaskName]= useState(task.taskName)
     const [taskDescription, setTaskDescription]= useState(task.taskDescription)
+    const [isOpen, setIsOpen]= useState(false)
+
+    const onOpen=()=> setIsOpen(true)
+    const onClose=()=> setIsOpen(false)
+
+
     let counter=0
     let taskStatus=''
 
@@ -133,11 +139,20 @@ const TaskDesc = () => {
       .catch(err=>{
         console.log(err )
       })
-      
-
-      // setDropdownVal(newList)
-
     }
+    const deleteChecklist= (id)=>{
+      let listId= checklist[id]._id
+      api.delete(`/user/${taskId}/checklist/delete/${listId}`,{
+        headers:{'Authorization': `Bearer ${localStorage.getItem("accessToken")}`}
+      })
+      .then(res=>{
+        getChecklistItems()
+      })
+      .catch(err=>{
+        console.log(err)
+      })
+    }
+    
     
     
     
@@ -156,23 +171,26 @@ const TaskDesc = () => {
       {/* Checklist */}
 
       <div className='mt-10'>
-        <p className='text-xl font-semibold mb-2'>Checklist </p>
+        <div className='flex mb-2 items-center'>
+          <p className='text-xl font-semibold '>Checklist </p>
+          <div className='mx-3 border rounded hover:scale-105 duration-150 ease-in-out cursor-pointer'
+          onClick={onOpen}>
+            <Plus size={22}/>
+          </div>
+          <ChecklistModal isOpen={isOpen} onClose={onClose} taskId={taskId} getChecklistItems={getChecklistItems}/>
+        </div>
+        
         {
           checklist &&
           checklist.map(item=>{
 
             let status= dropdownVal[counter]
-            
-
             return(
-            <SingleCheckItem id={counter++} status={status} bgColour={dropdownBg[status]} itemName={item.name} key={item._id} onDropdownChange={onDropdownChange}/>
+            <SingleCheckItem id={counter++} status={status} bgColour={dropdownBg[status]} itemName={item.name} key={item._id} onDropdownChange={onDropdownChange} deleteChecklist={deleteChecklist}/>
           )}
           )
         }
-        
       </div>
-
-
     </div>
   )
 }

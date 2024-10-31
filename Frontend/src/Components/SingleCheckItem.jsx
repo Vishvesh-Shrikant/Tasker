@@ -3,18 +3,15 @@ import {Select} from '@chakra-ui/react'
 import { Trash } from 'lucide-react'
 
 
-const SingleCheckItem = ({id, bgColour, itemName, onDropdownChange, status}) => {
-  const [checked, setIsChecked]= useState(false)
-  const {optRef}= useRef()
+const SingleCheckItem = ({id, bgColour, itemName, onDropdownChange, status, deleteChecklist}) => {
   return (
     <div className='my-5 px-10 flex items-center '>
-        <div className='cursor-pointer border rounded p-1'>
-          <Trash size={18} color='red' />
+        <div className='cursor-pointer border rounded p-1' onClick={()=>{deleteChecklist(id)}}>
+          <Trash size={22} color='red' />
         </div>
         <Select 
-        ref={optRef}
-        size='xs' 
-        width={'15%'} 
+        size='sm' 
+        width={'25%'} 
         bg={bgColour} borderColor={bgColour}
         className='border-none outline-none rounded mx-2 font-semibold text-lg'
         onChange={e=>onDropdownChange(e, id)}
@@ -24,7 +21,7 @@ const SingleCheckItem = ({id, bgColour, itemName, onDropdownChange, status}) => 
             <option value='ongoing'>In-Progress</option>
             <option value='completed'>Done</option>
         </Select>
-        <p className={`mx-5 ${checked? 'line-through opacity-80':'opacity-100'}`}>
+        <p className={`mx-5 text-xl ${status==='completed'? 'line-through opacity-80':'opacity-100'}`}>
         {itemName}
         </p>
 
