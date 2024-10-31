@@ -21,7 +21,9 @@ app.use(taskRoutes)
 app.use(checkListRoutes)
 
 
-
+app.get('/', (req, res)=>{
+    res.send('Fine')
+})
 
 const connectDB=async()=>{
     try
