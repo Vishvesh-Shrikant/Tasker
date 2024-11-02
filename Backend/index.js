@@ -11,7 +11,6 @@ const taskRoutes= require('./Routes/taskRoutes.js')
 const checkListRoutes= require('./Routes/checkListRoutes.js')
 const app=express()
 
-app.use()
 app.use(cors(corsOptions))
 app.use(cookieParser())
 app.use(express.json())
